@@ -1,6 +1,40 @@
 <!-- the main node definition that is registered with the editor -->
 <script type="text/javascript">
-    RED.nodes.registerType('oauth2',{
+    RED.nodes.registerType('oauth2-credentials', {
+        category: 'config',
+        defaults: {
+            account_name: {value:"", required: true},
+            client_id: {value:"", required: true},
+            client_secret: {value:"", required: true}
+        },
+        credentials: {
+            account_name: {type:"text"},
+            client_id: {type: "password"},
+            client_secret: {type:"password"}
+        },
+        label: function() {
+            return this.account_name;
+        },
+        exportable: false,
+        oneditprepare: function() {
+            var configNodeId = this.id;
+            function showTwitterAuthStart() {
+                var pathname = document.location.pathname;
+                if (pathname.slice(-1) != "/") {
+                    pathname += "/";
+                }
+                var callback = encodeURIComponent(location.protocol+"//"+location.hostname+":"+location.port+pathname+"oauth2-credentials/"+configNodeId+"/auth/callback");
+                $("#node-config-dialog-ok").button("disable");
+                $("#node-config-oauth-row").html('<div style="text-align: center; margin-top: 20px; "><a class="editor-button" id="node-config-oauth-start" href="oauth-credentials/'+configNodeId+'/auth?callback='+callback+'" target="_blank">'+clickhere+'</a></div>');
+            }
+        },
+        oneditsave: function() {
+        },
+        oneditcancel: function(adding) {
+        }
+    });
+
+    RED.nodes.registerType('oauth2', {
         category: 'function',
         color: '#a6bbcf',
         defaults: {
@@ -9,18 +43,36 @@
         },
         inputs:1,
         outputs:1,
-        icon: "icons/oauth-2-sm.png",
+        icon: "oauth-2-sm.png",
         label: function() {
-            return this.name||"lower-case";
+            return this.name||"oauth2";
         }
     });
 </script>
 
 <!-- the edit template -->
+<script type="text/x-red" data-template-name="oauth2-credentials">
+    <div class="form-row">
+        <label for="node-input-accountname"><i class="fa fa-user"></i> Account Name</label>
+        <input type="text" id="node-input-account-name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-id"><i class="fa fa-user-circle"></i> Client ID</label>
+        <input type="text" id="node-input-client-id">
+    </div>
+    <div class="form-row">
+        <label for="node-input-secret"><i class="fa fa-user-secret"></i> Client Secret</label>
+        <input type="password" id="node-input-client-secret">
+    </div>
+</script>
 <script type="text/x-red" data-template-name="oauth2">
     <div class="form-row">
-        <label for="node-input-credentials"><i class="icon-tag"></i> Client credentials</label>
+        <label for="node-input-credentials"><i class="fa fa-user"></i> Account</label>
         <input type="text" id="node-input-credentials">
+    </div>
+    <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name">
     </div>
 </script>
 

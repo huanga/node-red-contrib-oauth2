@@ -13,4 +13,15 @@ module.exports = function(RED) {
             secret: {"type": "password"}
         }
     });
+
+    function OAuth2CredentialsNode(config) {
+        RED.nodes.createNode(this, config);
+    }
+    RED.nodes.registerType("oauth2-credentials", OAuth2Node, {
+        credentials: {
+            account_name: {type:"text"},
+            client_id: {type: "password"},
+            client_secret: {type:"password"}
+        }
+    });
 }
