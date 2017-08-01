@@ -1,0 +1,30 @@
+<!-- the main node definition that is registered with the editor -->
+<script type="text/javascript">
+    RED.nodes.registerType('oauth2',{
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            credentials: {type: "oauth2-credentials", required: true},
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:1,
+        icon: "icons/oauth-2-sm.png",
+        label: function() {
+            return this.name||"lower-case";
+        }
+    });
+</script>
+
+<!-- the edit template -->
+<script type="text/x-red" data-template-name="oauth2">
+    <div class="form-row">
+        <label for="node-input-credentials"><i class="icon-tag"></i> Client credentials</label>
+        <input type="text" id="node-input-credentials">
+    </div>
+</script>
+
+<!-- the help text -->
+<script type="text/x-red" data-help-name="oauth2">
+    <p>An OAuth2 client which produces a valid access token as output.</p>
+</script>
