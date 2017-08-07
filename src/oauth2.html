@@ -29,8 +29,9 @@
         category: 'function',
         color: '#a6bbcf',
         defaults: {
-            account: {value:"", type: "oauth2-credentials", required: true},
-            name: {value:""}
+            account: {value: "", type: "oauth2-credentials", required: true},
+            name: {value: ""},
+            tokenHost: {value: "", required: true}
         },
         inputs:1,
         outputs:1,
@@ -58,12 +59,16 @@
 </script>
 <script type="text/x-red" data-template-name="oauth2">
     <div class="form-row">
+        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+        <input type="text" id="node-input-name">
+    </div>
+    <div class="form-row">
         <label for="node-input-account"><i class="fa fa-user"></i> Account</label>
         <input type="text" id="node-input-account">
     </div>
     <div class="form-row">
-        <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
-        <input type="text" id="node-input-name">
+        <label for="node-input-tokenHost" title="URL without path where token requests are sent to."><i class="fa fa-external-link"></i> Token Host</label>
+        <input type="text" id="node-input-tokenHost" placeholder="https://custom-service.org">
     </div>
 </script>
 

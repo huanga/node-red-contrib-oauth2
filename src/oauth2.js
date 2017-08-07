@@ -1,4 +1,6 @@
 module.exports = function(RED) {
+    const OAuth2 = require('simple-oauth2');
+
     function OAuth2CredentialsNode(config) {
         RED.nodes.createNode(this, config);
         this.clientId = config.clientId;
@@ -10,6 +12,16 @@ module.exports = function(RED) {
         RED.nodes.createNode(this, config);
         var node = this;
         node.credentials = RED.nodes.getNode(config.account);
+        const credentials = {
+            client: {
+                id: node.credentials.clientId,
+                secret: node.credentials.clientSecret
+            },
+            auth: {
+                tokenHost: config.tokenHost
+            }
+        };
+        const oauth2 = OAuth2.create(credentials);
         node.on('input', function(msg) {
             var event = {
                 payload: {
@@ -23,7 +35,7 @@ module.exports = function(RED) {
     }
     RED.nodes.registerType("oauth2", OAuth2Node, {
         credentials: {
-            name: {type: "text"}
+            account: {type: "text"}
         }
     });
 }
