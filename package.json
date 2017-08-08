@@ -3,7 +3,8 @@
     "version": "0.0.1",
     "description": "Provides an OAuth2 client node.",
     "dependencies": {
-        "simple-oauth2": "^1.2.0"
+        "simple-oauth2": "^1.2.0",
+        "javascript-state-machine": "^3.0.1"
     },
     "node-red": {
         "nodes": {
