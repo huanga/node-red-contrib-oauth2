@@ -5,24 +5,13 @@
         defaults: {
             accountName: {value:"", required: true},
             clientId: {value:"", required: true},
-            clientSecret: {value:"", required: true}
+            clientSecret: {value:"", required: true},
+            tokenHost: {value:"", required: true},
         },
         label: function() {
             return this.accountName;
         },
-        exportable: false,
-        oneditprepare: function() {
-            var configNodeId = this.id;
-            function showTwitterAuthStart() {
-                var pathname = document.location.pathname;
-                if (pathname.slice(-1) != "/") {
-                    pathname += "/";
-                }
-                var callback = encodeURIComponent(location.protocol+"//"+location.hostname+":"+location.port+pathname+"oauth2-credentials/"+configNodeId+"/auth/callback");
-                $("#node-config-dialog-ok").button("disable");
-                $("#node-config-oauth-row").html('<div style="text-align: center; margin-top: 20px; "><a class="editor-button" id="node-config-oauth-start" href="oauth-credentials/'+configNodeId+'/auth?callback='+callback+'" target="_blank">'+clickhere+'</a></div>');
-            }
-        }
+        exportable: false
     });
 
     RED.nodes.registerType('oauth2', {
@@ -31,13 +20,37 @@
         defaults: {
             account: {value: "", type: "oauth2-credentials", required: true},
             name: {value: ""},
-            tokenHost: {value: "", required: true}
+            scope: {value: ""}
         },
         inputs:1,
         outputs:1,
         icon: "oauth-2-sm.png",
         label: function() {
             return this.name||"oauth2";
+        },
+        oneditprepare: function() {
+            let disableStartAuthenticationButton = function() {
+                $('#node-config-startAuth')
+                    .addClass('disabled')
+                    .click(function(event) {
+                        event.preventDefault();
+                    });
+            };
+            let currentUri = window.location;
+            $.getJSON('oauth2/node/' + this.id + '/auth/url', {
+                    protocol: currentUri.protocol,
+                    hostname: currentUri.hostname,
+                    port: currentUri.port
+                }, function(response) {
+                if (response.url) {
+                    $('#node-config-startAuth').attr('href', response.url);
+                } else {
+                    disableStartAuthenticationButton();
+                }
+            })
+            .fail(function() {
+                disableStartAuthenticationButton();
+            });
         }
     });
 </script>
@@ -47,6 +60,10 @@
     <div class="form-row">
         <label for="node-config-input-accountName"><i class="fa fa-user"></i> Account Name</label>
         <input type="text" id="node-config-input-accountName">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-tokenHost" title="URL without path where token requests are sent to."><i class="fa fa-external-link"></i> Token Host</label>
+        <input type="text" id="node-config-input-tokenHost" placeholder="https://custom-service.org">
     </div>
     <div class="form-row">
         <label for="node-config-input-clientId"><i class="fa fa-user-circle"></i> Client ID</label>
@@ -67,8 +84,12 @@
         <input type="text" id="node-input-account">
     </div>
     <div class="form-row">
-        <label for="node-input-tokenHost" title="URL without path where token requests are sent to."><i class="fa fa-external-link"></i> Token Host</label>
-        <input type="text" id="node-input-tokenHost" placeholder="https://custom-service.org">
+        <label for="node-input-scope"><i class="icon-lock"></i> Scope</label>
+        <input type="text" id="node-input-scope">
+    </div>
+    <div class="form-row">
+    <label>&nbsp;</label>
+       <a class="btn" id="node-config-startAuth" href="#" target="_blank">Authenticate to initialize token</a>
     </div>
 </script>
 
