@@ -23,7 +23,8 @@ module.exports = function(RED) {
                 secret: node.credentials.clientSecret
             },
             auth: {
-                tokenHost: node.credentials.tokenHost
+                tokenHost: node.credentials.tokenHost,
+                tokenPath: '/api/oauth.access' // TODO make it configurable
             }
         };
         const oauth2 = OAuth2.create(credentials);
@@ -39,21 +40,22 @@ module.exports = function(RED) {
                 onInit: function() {
                     node.status({fill: "red", shape: "dot", text: "uninitialized token"});
                 },
-                onObtain: function(callbackCode) {
+                onObtain: function(transition, code) {
                     var tokenConfig = {
-                        code: callbackCode,
-                        redirect_uri: 'fuck'
+                        code: code,
+                        redirect_uri: node.context().get('callback_url')
                     };
                     node.log(util.inspect(tokenConfig));
                     return new Promise(function(resolve, reject) {
                         oauth2.authorizationCode.getToken(tokenConfig)
                             .then((result) => {
-                                node.log('accessToken: ' + oauth2.accessToken.create(result));
+                                node.log('accessToken: ' + util.inspect(oauth2.accessToken.create(result)));
                                 node.status({fill: "green", shape: "dot", text: "has token"});
                                 resolve();
                             })
                             .catch((error) => {
-                                node.error('Access Token Error', error.message);
+                                node.error('Access Token Error: ' + error.message);
+                                node.log(util.inspect(error));
                                 reject(error);
                             });
                     });
@@ -128,7 +130,6 @@ module.exports = function(RED) {
             return;
         }
 
-        // TODO pass code to FSM somehow
         node.getStateMachine().obtain(req.query.code);
         res.sendStatus(200);
     });
