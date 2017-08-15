@@ -1,13 +1,21 @@
 module.exports = function(RED) {
     const OAuth2 = require('simple-oauth2');
     const StateMachine = require('javascript-state-machine');
+    const crypto = require('crypto');
     const util = require('util');
 
     function OAuth2CredentialsNode(config) {
         RED.nodes.createNode(this, config);
+        let stringOrDefault = function(value, defaultValue) {
+            return typeof value == 'string' && value.length > 0 ? value : defaultValue;
+        }
         this.clientId = config.clientId;
         this.clientSecret = config.clientSecret;
         this.tokenHost = config.tokenHost;
+        this.tokenPath = stringOrDefault(config.tokenPath, undefined);
+        this.revokePath = stringOrDefault(config.revokePath, undefined);
+        this.authorizeHost = stringOrDefault(config.authorizeHost, undefined);
+        this.authorizePath = stringOrDefault(config.authorizePath, undefined);
     }
     RED.nodes.registerType("oauth2-credentials", OAuth2CredentialsNode);
 
@@ -24,59 +32,75 @@ module.exports = function(RED) {
             },
             auth: {
                 tokenHost: node.credentials.tokenHost,
-                tokenPath: '/api/oauth.access' // TODO make it configurable
+                tokenPath: node.credentials.tokenPath,
+                revokePath: node.credentials.revokePath,
+                authorizeHost: node.credentials.authorizeHost,
+                authorizePath: node.credentials.authorizePath
             }
         };
         const oauth2 = OAuth2.create(credentials);
         const fsm = new StateMachine({
-            init: 'noToken',
+            init: 'no_token',
             transitions: [
-                { name: 'obtain', from: 'noToken', to: 'hasToken' },
-                { name: 'invalidate', from: 'hasToken', to: 'tokenExpired' },
-                { name: 'renew', from: 'tokenExpired', to: 'hasToken' },
-                { name: 'renewFailed', from: 'tokenExpired', to: 'noToken' }
+                { name: 'obtain', from: 'no_token', to: 'has_token' },
+                { name: 'invalidate', from: 'has_token', to: 'token_expired' },
+                { name: 'renew', from: 'token_expired', to: 'has_token' },
+                { name: 'failed', from: 'token_expired', to: 'no_token' }
             ],
             methods: {
-                onInit: function() {
-                    node.status({fill: "red", shape: "dot", text: "uninitialized token"});
-                },
                 onObtain: function(transition, code) {
-                    var tokenConfig = {
+                    let tokenConfig = {
                         code: code,
                         redirect_uri: node.context().get('callback_url')
                     };
-                    node.log(util.inspect(tokenConfig));
                     return new Promise(function(resolve, reject) {
                         oauth2.authorizationCode.getToken(tokenConfig)
                             .then((result) => {
-                                node.log('accessToken: ' + util.inspect(oauth2.accessToken.create(result)));
-                                node.status({fill: "green", shape: "dot", text: "has token"});
+                                node.context().set('access_token', oauth2.accessToken.create(result))
                                 resolve();
                             })
                             .catch((error) => {
-                                node.error('Access Token Error: ' + error.message);
-                                node.log(util.inspect(error));
+                                node.error('Obtaining Access Token Failed: ' + error.message);
                                 reject(error);
                             });
                     });
                 },
-                onInvalidate: function() {
-
-                },
                 onRenew: function() {
-
+                    let accessToken = node.context().get('access_token');
+                    return new Promise(function(resolve, reject) {
+                        accessToken.refresh()
+                        .then((result) => {
+                            node.context().set('access_token', result);
+                            resolve();
+                        })
+                        .catch((error) => {
+                            node.error('Access Token Renew Failed: ' + error.message);
+                            reject(error);
+                            fsm.failed();
+                        });
+                    });
                 },
-                onRenewFailed: function() {
-
-                }
+                onEnterHasToken: function() {
+                    node.status({fill: "green", shape: "dot", text: "has token"});
+                },
+                onEnterNoToken: function() {
+                    node.status({fill: "red", shape: "dot", text: "uninitialized token"});
+                },
             }
         });
         node.on('input', function(msg) {
+            if (!fsm.is('has_token')) {
+                return;
+            }
+            let accessToken = node.context().get('access_token');
+            if (accessToken.expired()) {
+                fsm.invlidate();
+                fsm.renew();
+                return; // TODO wait for the outcome of renew process 
+            }
             let event = {
                 payload: {
-                    foo: 'bar',
-                    clientId: node.credentials.clientId,
-                    clientSecret: node.credentials.clientSecret
+                    accessToken: accessToken.token.access_token
                 }
             };
             node.send(event);
@@ -88,10 +112,12 @@ module.exports = function(RED) {
             let callbackUrl = protocol + '//' + hostname + (port ? ':' + port : '')
                 + '/oauth2/node/' + node.id + '/auth/callback';
             node.context().set('callback_url', callbackUrl);
+            let csrfToken = crypto.randomBytes(18).toString('base64').replace(/\//g, '-').replace(/\+/g, '_');
+            node.context().set('csrf_token', csrfToken);
             return oauth2.authorizationCode.authorizeURL({
                 redirect_uri: callbackUrl,
                 scope: node.scope,
-                state: '1234' // TODO add CSRF token
+                state: csrfToken
             });
         };
     }
@@ -127,6 +153,11 @@ module.exports = function(RED) {
         let node = RED.nodes.getNode(req.params.id);
         if (!node) {
             res.sendStatus(404);
+            return;
+        }
+
+        if (node.context().get('csrf_token') != req.query.state) {
+            res.sendStatus(401);
             return;
         }
 

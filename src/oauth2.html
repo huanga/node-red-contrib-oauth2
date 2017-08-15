@@ -3,10 +3,14 @@
     RED.nodes.registerType('oauth2-credentials', {
         category: 'config',
         defaults: {
-            accountName: {value:"", required: true},
-            clientId: {value:"", required: true},
-            clientSecret: {value:"", required: true},
-            tokenHost: {value:"", required: true},
+            accountName: {value: "", required: true},
+            clientId: {value: "", required: true},
+            clientSecret: {value: "", required: true},
+            tokenHost: {value: "", required: true},
+            tokenPath: {value: ""},
+            revokePath: {value: ""},
+            authorizeHost: {value: ""},
+            authorizePath: {value: ""}
         },
         label: function() {
             return this.accountName;
@@ -72,6 +76,22 @@
     <div class="form-row">
         <label for="node-config-input-clientSecret"><i class="fa fa-user-secret"></i> Client Secret</label>
         <input type="password" id="node-config-input-clientSecret" autocomplete="off">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-tokenPath" title="Path to request an access token."><i class="fa fa-cog"></i> Token Path</label>
+        <input type="text" id="node-config-input-tokenPath" placeholder="/oauth/token">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-revokePath" title="Path to revoke an access token."><i class="fa fa-cog"></i> Revoke Path</label>
+        <input type="text" id="node-config-input-revokePath" placeholder="/oauth/revoke">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-authorizeHost" title="URL of the host to send authorization code request."><i class="fa fa-cog"></i> Authorize Host</label>
+        <input type="text" id="node-config-input-authorizeHost" placeholder="Defaults to Token Host">
+    </div>
+    <div class="form-row">
+        <label for="node-config-input-authorizePath" title="Path to request an authorization code."><i class="fa fa-cog"></i> Authorize Path</label>
+        <input type="text" id="node-config-input-authorizePath" placeholder="/oauth/authorize">
     </div>
 </script>
 <script type="text/x-red" data-template-name="oauth2">
