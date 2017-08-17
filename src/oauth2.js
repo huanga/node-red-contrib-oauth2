@@ -6,7 +6,7 @@ module.exports = function(RED) {
 
     function OAuth2CredentialsNode(config) {
         RED.nodes.createNode(this, config);
-        let stringOrDefault = function(value, defaultValue) {
+        let stringOrDefault = (value, defaultValue) => {
             return typeof value == 'string' && value.length > 0 ? value : defaultValue;
         }
         this.clientId = config.clientId;
@@ -53,7 +53,7 @@ module.exports = function(RED) {
                         code: code,
                         redirect_uri: node.context().get('callback_url')
                     };
-                    return new Promise(function(resolve, reject) {
+                    return new Promise((resolve, reject) => {
                         oauth2.authorizationCode.getToken(tokenConfig)
                             .then((result) => {
                                 node.context().set('access_token', oauth2.accessToken.create(result))
@@ -67,11 +67,11 @@ module.exports = function(RED) {
                 },
                 onRenew: function() {
                     let accessToken = node.context().get('access_token');
-                    return new Promise(function(resolve, reject) {
+                    return new Promise((resolve, reject) => {
                         accessToken.refresh()
                         .then((result) => {
                             node.context().set('access_token', result);
-                            resolve();
+                            resolve(result);
                         })
                         .catch((error) => {
                             node.error('Access Token Renew Failed: ' + error.message);
@@ -83,27 +83,39 @@ module.exports = function(RED) {
                 onEnterHasToken: function() {
                     node.status({fill: "green", shape: "dot", text: "has token"});
                 },
+                onEnterTokenExpired: function() {
+                    node.status({fill: "red", shape: "dot", text: "expired token"});
+                },
                 onEnterNoToken: function() {
-                    node.status({fill: "red", shape: "dot", text: "uninitialized token"});
+                    node.status({fill: "grey", shape: "dot", text: "uninitialized token"});
                 },
             }
         });
-        node.on('input', function(msg) {
+        node.on('input', (msg) => {
             if (!fsm.is('has_token')) {
                 return;
             }
+
+            let emitTokenEvent = (accessToken) => {
+                let event = {
+                    payload: {
+                        accessToken: accessToken.token.access_token
+                    }
+                };
+                node.send(event);
+            };
             let accessToken = node.context().get('access_token');
+
             if (accessToken.expired()) {
                 fsm.invlidate();
-                fsm.renew();
-                return; // TODO wait for the outcome of renew process 
+                fsm.renew()
+                .then((accessToken) => {
+                    emitTokenEvent(accessToken);
+                });
+                return;
             }
-            let event = {
-                payload: {
-                    accessToken: accessToken.token.access_token
-                }
-            };
-            node.send(event);
+
+            emitTokenEvent(accessToken);
         });
         node.getStateMachine = function() {
             return fsm;
@@ -127,7 +139,7 @@ module.exports = function(RED) {
         }
     });
 
-    RED.httpAdmin.get('/oauth2/node/:id/auth/url', function(req, res) {
+    RED.httpAdmin.get('/oauth2/node/:id/auth/url', (req, res) => {
         if (!req.params.id || !req.query.protocol || !req.query.hostname || !req.query.port) {
             res.sendStatus(400);
             return;
@@ -144,7 +156,7 @@ module.exports = function(RED) {
         });
     });
 
-    RED.httpAdmin.get('/oauth2/node/:id/auth/callback', function(req, res) {
+    RED.httpAdmin.get('/oauth2/node/:id/auth/callback', (req, res) => {
         if (!req.params.id || !req.query.code || !req.query.state) {
             res.sendStatus(400);
             return;
