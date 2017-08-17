@@ -60,7 +60,7 @@ module.exports = function(RED) {
                                 resolve();
                             })
                             .catch((error) => {
-                                node.error('Obtaining Access Token Failed: ' + error.message);
+                                node.error('Obtaining Access Token Failed: ' + error.message, error);
                                 reject(error);
                             });
                     });
@@ -74,7 +74,7 @@ module.exports = function(RED) {
                             resolve(result);
                         })
                         .catch((error) => {
-                            node.error('Access Token Renew Failed: ' + error.message);
+                            node.error('Access Token Renew Failed: ' + error.message, error);
                             reject(error);
                             fsm.failed();
                         });
