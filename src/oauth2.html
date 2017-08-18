@@ -44,7 +44,7 @@
             $.getJSON('oauth2/node/' + this.id + '/auth/url', {
                     protocol: currentUri.protocol,
                     hostname: currentUri.hostname,
-                    port: currentUri.port
+                    port: currentUri.port || 80
                 }, function(response) {
                 if (response.url) {
                     $('#node-config-startAuth').attr('href', response.url);
