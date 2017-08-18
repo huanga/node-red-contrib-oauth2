@@ -147,7 +147,10 @@
         value which can be passed to other nodes sending messages to an OAuth protected API.</p>
         <p>To configure the node, first you need to collect provider specific OAuth2 data like URL to the authenticator,
         client ID and client secret along with scope. These have to be set for the Account property of the node.
-        Further optional OAuth parameters can be configured like URL path to the token provider API endpoint.</p>
+        Further optional OAuth parameters can be configured like URL path to the token provider API endpoint.
+        When done with configuration deploy the node. After that edit node properties again and click on the
+        "Authenticate to initialize token" button. Once this is done, node status turns green showing "has token"
+        status.</p>
         <p>When an input comes in, the node checks if the access token is still valid. If not it tries to renew the
         token automatically and the new token will be sent in the outgoing message. In case of failure message is not
         sent out and the node status changes to "expired token". However it will retry the renewal process on next
