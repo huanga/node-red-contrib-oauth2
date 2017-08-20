@@ -120,7 +120,7 @@
     <h3>Inputs</h3>
         <dl class="message-properties">
             <dt class="optional">payload
-                <span class="property-type">string | buffer</span>
+                <span class="property-type">object</span>
             </dt>
             <dd>any message to trigger producing a token.</dd>
         </dl>
@@ -131,6 +131,8 @@
                 <dl class="message-properties">
                     <dt>payload.accessToken <span class="property-type">string</span></dt>
                     <dd>an OAuth2 access token.</dd>
+                    <dt>payload <span class="property-type">object</span></dt>
+                    <dd>the input payload.</dd>
                 </dl>
             </li>
             <li>Standard error

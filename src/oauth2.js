@@ -97,12 +97,8 @@ module.exports = function(RED) {
             }
 
             let emitTokenEvent = (accessToken) => {
-                let event = {
-                    payload: {
-                        accessToken: accessToken.token.access_token
-                    }
-                };
-                node.send(event);
+                msg.payload.accessToken = accessToken.token.access_token;
+                node.send(msg);
             };
             let accessToken = node.context().get('access_token');
 
