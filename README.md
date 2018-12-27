@@ -1,4 +1,5 @@
 # node-red-contrib-oauth2
+[![Build Status](https://travis-ci.com/elvetemedve/node-red-contrib-oauth2.svg?branch=master)](https://travis-ci.com/elvetemedve/node-red-contrib-oauth2)
 
 A wrapper for [Simple OAuth2](http://lelylan.github.io/simple-oauth2/) client library.
 
