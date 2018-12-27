@@ -17,6 +17,10 @@ value which can be passed to other nodes sending messages to an OAuth protected 
 - To make Node-RED find the code, define the NODE_PATH environment variable by adding the
 Node-RED installation directory first, and the user directory second. Here is an example: `NODE_PATH="/usr/src/node-red/node_modules:/data/node_modules"`
 
+# Unit tests
+
+To run unit tests run `npm test` from the command line.
+
 # Known issues
 
 - Node cannot start authentication from a subflow, therefore obtain the initial access token.
