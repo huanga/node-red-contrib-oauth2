@@ -7,6 +7,7 @@
         "javascript-state-machine": "^3.0.1",
         "simple-oauth2": "^1.2.0"
     },
+    "keywords": [ "node-red" ],
     "node-red": {
         "nodes": {
             "oauth2": "src/oauth2.js"
